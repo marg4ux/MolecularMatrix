@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "BTS | Behind The Stoichiometry";
 }
 
@@ -65,6 +65,7 @@
         </form>
         <div id="resultContainer"></div>
     </div>
+    </div>
 
 
     <script>
@@ -105,13 +106,17 @@
                     }
                 });
 
+                console.log("🔹 Sending Data:", formData);
+
                 $.ajax({
-                    url: "/Calculate",
+                    url: "Calculate",
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify(formData),
                     dataType: "json",
                     success: function (response) {
+                        console.log("✅ Server Response:", response);
+
                         let resultHTML = `
                             <h3>Molecular Mass Calculation Results</h3>
                             <div class="result-box">
@@ -138,7 +143,7 @@
                                 <p><strong>${formatFormula(response.molecularFormula || "N/A")}</strong></p>
                             </div>`;
 
-                        $("#resultContainer").html(resultHTML);  // Display results
+                        $("#resultContainer").html(resultHTML);  // Display the formatted result
                     },
                     error: function (xhr, status, error) {
                         console.error("❌ AJAX Error:", error);
@@ -156,5 +161,7 @@
             }
         });
     </script>
+
+
 </body>
 </html>
