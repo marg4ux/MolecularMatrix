@@ -1,0 +1,160 @@
+﻿@{
+    ViewData["Title"] = "BTS | Behind The Stoichiometry";
+}
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="google-site-verification" content="YwUUXDRIU6Stwxk1zc4ai2XvA-x_vrloI2GOZw3t1yA" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>BTS | Behind The Stoichiometry</title>
+
+    <link rel="shortcut icon" type="image/png" href="Images/favicon.png">
+    <link rel="stylesheet" href="~/css/site.css">
+
+</head>
+<body>
+
+    <div class="wrapper">
+        <div id="nav">
+            <div class="logo">
+                <h4>BTS</h4>
+            </div>
+            <div class="footerlinks">
+                <a href="https://marg4ux.github.io/InfoZine/">InfoZine</a>
+            </div>
+        </div>
+        </div>
+
+    <div class="landing">
+        <div class="landingText" data-aos="fade-up" data-aos-duration="1000">
+            <h1>[BTS] | <span style="color:#2f88c8;font-size: 4vw">Behind The Stoichiometry.</span> </h1>
+            <h3> <br>Explore stoichiometry with our Molecular Matrix Calculator. Head over to the InfoZine tab for instructions, and visit the Molecular Matrix tab for the calculator. </h3>
+        </div>
+        <div class="landingImage" data-aos="fade-down" data-aos-duration="2000">
+            <img src="images/bg.png" alt="">
+        </div>
+    </div>
+  <script src="site.js"></script>
+    <script>
+        AOS.init();
+    </script>
+
+
+    <div class="calculator-section">
+        <h2>Molecular Mass Calculator</h2>
+
+        <form id="calcForm">
+            <div id="elementsContainer">
+                <div class="elementRow">
+                    <input type="text" name="elem[]" placeholder="Element (e.g., H, O)" required>
+                    <input type="number" name="coeff[]" placeholder="Subscript" min="1" required>
+                    <button type="button" class="deleteElement">❌</button>
+                </div>
+            </div>
+
+            <label>Total Molar Mass (optional):</label>
+            <input type="number" name="totalMass" step="0.01">
+
+            <button type="button" id="addElementBtn">Add Element</button>
+            <button type="submit">Calculate</button>
+        </form>
+        <div id="resultContainer"></div>
+    </div>
+
+
+    <script>
+        $(document).ready(function () {
+            // Handle dynamic element addition
+            $("#addElementBtn").on("click", function () {
+                let newRow = `
+                    <div class="elementRow">
+                        <input type="text" name="elem[]" placeholder="Element (e.g., H, O)" required>
+                        <input type="number" name="coeff[]" placeholder="Subscript" min="1" required>
+                        <button type="button" class="deleteElement">❌</button>
+                    </div>`;
+                $("#elementsContainer").append(newRow);
+            });
+
+            // Handle delete element button
+            $(document).on("click", ".deleteElement", function () {
+                $(this).parent().remove();
+            });
+
+            // Handle form submission (prevents reload)
+            $("#calcForm").submit(function (event) {
+                event.preventDefault();
+
+                let formData = {
+                    elem: [],
+                    coeff: [],
+                    totalMass: $("input[name='totalMass']").val().trim() ? parseFloat($("input[name='totalMass']").val()) : null
+                };
+
+                $(".elementRow").each(function () {
+                    let element = $(this).find("input[name='elem[]']").val().trim();
+                    let coefficient = $(this).find("input[name='coeff[]']").val().trim();
+
+                    if (element !== "" && coefficient !== "") {
+                        formData.elem.push(element);
+                        formData.coeff.push(parseInt(coefficient, 10));
+                    }
+                });
+
+                $.ajax({
+                    url: "/Calculate",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(formData),
+                    dataType: "json",
+                    success: function (response) {
+                        let resultHTML = `
+                            <h3>Molecular Mass Calculation Results</h3>
+                            <div class="result-box">
+                                <h4>Total Molar Mass:</h4>
+                                <p>${response.molarMass ? response.molarMass.toFixed(2) : "N/A"} g/mol</p>
+                            </div>
+                            <div class="result-box">
+                                <h4>Percent Composition:</h4>
+                                <ul>`;
+
+                        if (response.percentComposition) {
+                            Object.entries(response.percentComposition).forEach(([element, percent]) => {
+                                resultHTML += `<li><strong>${element}</strong>: ${percent.toFixed(2)}%</li>`;
+                            });
+                        }
+
+                        resultHTML += `</ul></div>
+                            <div class="result-box">
+                                <h4>Empirical Formula:</h4>
+                                <p><strong>${formatFormula(response.empiricalFormula)}</strong></p>
+                            </div>
+                            <div class="result-box">
+                                <h4>Molecular Formula:</h4>
+                                <p><strong>${formatFormula(response.molecularFormula || "N/A")}</strong></p>
+                            </div>`;
+
+                        $("#resultContainer").html(resultHTML);  // Display results
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("❌ AJAX Error:", error);
+                        $("#resultContainer").html(`<p style="color:red;">An error occurred. Please try again.</p>`);
+                    }
+                });
+            });
+
+            // Format the formula to add subscript where necessary
+            function formatFormula(formula) {
+                // This regex looks for numbers right after element symbols and adds the <sub> tag to make them subscripted
+                return formula.replace(/([A-Za-z]+)(\d+)/g, function(match, p1, p2) {
+                    return p1 + "<sub>" + p2 + "</sub>";
+                });
+            }
+        });
+    </script>
+</body>
+</html>
