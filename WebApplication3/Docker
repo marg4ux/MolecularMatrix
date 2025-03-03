@@ -4,7 +4,8 @@ WORKDIR /app
 EXPOSE 80
 
 # Use the official .NET SDK image for building the application
-FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+# Use the .NET 8.0 SDK image for building the application
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["WebApplication3/WebApplication3.csproj", "WebApplication3/"]
 RUN dotnet restore "WebApplication3/WebApplication3.csproj"
