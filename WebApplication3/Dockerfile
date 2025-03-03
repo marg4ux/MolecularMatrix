@@ -1,30 +1,30 @@
-# Use the official .NET 8.0 SDK image for building the application
+# Use the official .NET SDK image to build the app
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the .csproj file and restore any dependencies (via dotnet restore)
-COPY *.csproj ./
+# Copy the .csproj and restore the dependencies
+COPY WebApplication3/WebApplication3.csproj ./ 
 RUN dotnet restore
 
-# Copy the rest of the application files
-COPY . ./
+# Copy the rest of the application code
+COPY . .
 
-# Publish the app to the /out directory
-RUN dotnet publish -c Release -o /out
+# Build the application
+RUN dotnet publish -c Release -o /app/publish
 
-# Use the official .NET 8.0 runtime image for running the application
+# Use the official .NET runtime image to run the app
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 
-# Set the working directory for the app
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy the published application from the build image
-COPY --from=build /out .
+# Copy the published application from the build stage
+COPY --from=build /app/publish .
 
-# Expose port 80 for the application
+# Expose the port
 EXPOSE 80
 
-# Define the entry point for the application
+# Set the entry point for the container
 ENTRYPOINT ["dotnet", "WebApplication3.dll"]
